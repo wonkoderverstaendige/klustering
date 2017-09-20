@@ -15,7 +15,7 @@ geometries = {0: (1.25, 0.25),
 
 def csv_to_prb(csv_path, prb_path):
     # read the file
-    with open(csv_path) as csvfile:
+    with open(csv_path.name) as csvfile:
         reader = csv.reader(csvfile, delimiter=',')
         next(reader)
         rows = list(reader)
@@ -41,8 +41,8 @@ def csv_to_prb(csv_path, prb_path):
                       'description': description}
 
     # Write fields out to prb file
-    with open(prb_path, 'w') as prb:
-        prb.write('# Dead channels contain all non-tetrode channels!')
+    with open(prb_path.name, 'w') as prb:
+        prb.write('# Dead channels contain all non-tetrode channels!\n\n')
         prb.write('dead_channels = {}\n'.format(pretty(dead)))
         prb.write('channel_groups = {}'.format(pretty(groups)))
 
