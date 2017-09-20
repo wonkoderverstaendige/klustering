@@ -1,0 +1,26 @@
+name: klusta
+dependencies:
+  - python=3.5
+  - pip
+  - numpy
+  - scipy
+  - h5py
+  - six
+  - cython
+  - ipython
+  - matplotlib
+  - pyqt=4
+  - pip:
+    - git+https://github.com/fpbattaglia/klusta.git@binarymasks
+    - pytest
+    - requests
+    - responses
+    - tqdm
+    - click
+    - traitlets
+    - joblib
+    - pyopengl
+    - vispy
+    - klustakwik2
+    - phy
+    - phycontrib
