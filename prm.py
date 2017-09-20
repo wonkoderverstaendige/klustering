@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Generate a .prm file for each .dat file in the working directory using the defaults from 
+# tetrode.prm template file.
 from pathlib import Path
 
 defaults_path = Path(__file__).resolve().parent
