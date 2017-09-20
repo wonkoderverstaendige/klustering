@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+export PATH=/home/reichler/anaconda3/bin:$PATH
+set -e
+PCMD=klusta
+
+DELETE_UNREFFED=true
+DELETE_DOTFOLDERS=true  # delete the .spikedetect and .klustakwik2 folders for speed
+
+ANIMAL=m26484
+DATA_DIR=/home/reichler/tp/home/data/$ANIMAL
+KLUSTERING=/home/reichler/tp/home/code/Klustering
+
+# File with list of data directories. Also used to name output files.
+SESSION_PATH=$1
+SESSION_FILE=${SESSION_PATH%.*}
+SESSION=${SESSION_FILE##*/}
+DATFILE="$SESSION".dat
+REFFED="$SESSION"_meanref.dat
+
+PRB_PATH=$2
+if [ -z "$PRB_PATH" ]; then
+	echo Using default probe path for animal $ANIMAL
+	PRB_PATH="$DATA_DIR"/"$ANIMAL"_16.prb
+fi
+
+echo testing probe path $PRB_PATH
+if ! [ -f "$PRB_PATH" ]; then
+	echo Probe file not found at $PRB_PATH. Exiting.
+	exit 1
+fi
+
+PRM_PATH=$3
+#if ! [ -f "$PRB_PATH" ]; then
+#	PRB_PATH="$DATA_DIR/$ANIMAL_16.prb"
+#fi
+
+
+# Load targets from session file
+mapfile -t <$1
+source_dirs="${MAPFILE[@]}"
+
+echo Clustering session "$SESSION"
+echo Source files: $source_dirs
+echo Probe file: $PRB_PATH
+echo Params template: $PRM_PATH
+echo Datfile $DATFILE
+echo --------------------------------
+
+# Convert and concatenate .continuous 
+if [ -f "$DATFILE" ]; then
+	echo Dat file exists, skipping conversion.
+else
+	dm conv -T $SESSION $source_dirs -l $PRB_PATH 
+fi
+
+
+# Reference file
+if [ -f "$REFFED" ]; then
+	echo Referenced file exists, skipping referencing.
+else
+	echo Referencing $SESSION.dat
+	dm ref "$SESSION".dat
+	echo
+fi
+
+# Delete unreferenced raw file
+if $DELETE_UNREFFED; then
+	echo Deleting unreferenced file
+	rm $DATFILE
+	echo
+fi
+
+# DM SPLIT
+echo Splitting into tetrodes
+dm split $REFFED -l $SESSION.prb
+echo
+
+# Generate prm files
+$KLUSTERING/prm.py
+
+# Give everyone their own directory
+for CG in {00..15}; do
+	if ! [ -d CG$CG ]; then
+		mkdir CG$CG
+		mv *_$CG.* CG$CG
+		cp $KLUSTERING/tetrode.prb CG$CG 
+	fi
+done
+
+# GNU PARALLEL KLUSTA
+echo Activating Unmasked klusta virtualenv
+source activate klusta_um
+
+parallel --eta -j8 'sleep {3}; echo starting CG$CG; cd CG{1} && klusta {2}_meanref_{1}.prm' ::: {00..15} ::: $SESSION ::: $(( 60 * $CG ))
+
+# Cleanup
+if $DELETE_DOTFOLDERS; then
+	echo Deleting .spikedetekt and .klustakwik2 directories.
+	for CG in {00..15}; do
+		rm -Rf CG$CG/.spikedetekt CG$CG/.klustakwik2
+	done
+fi
+
+echo ALL DONE!
