@@ -23,7 +23,7 @@ spikedetekt = {
     'excerpt_size_seconds': 20., # allow for more averaging in finding thresholds
     'use_single_threshold': False,
     'threshold_strong_std_factor': 4.5,
-    'threshold_weak_std_factor': 1.5, # to include all channels in the mask
+    'threshold_weak_std_factor': 0., # to include all channels in the mask
     'detect_spikes': 'negative',
     'binary_masks': True, # ADDED parameter, make masks all 0 or 1s. The joint effect of these parameter values should to 
                           # have all masks values at 1, which is likely desirable for tetrodes. 

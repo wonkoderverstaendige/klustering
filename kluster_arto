@@ -6,9 +6,9 @@ PCMD=klusta
 DELETE_UNREFFED=true
 DELETE_DOTFOLDERS=true  # delete the .spikedetect and .klustakwik2 folders for speed
 
-ANIMAL=m39228
-DATA_DIR=/home/reichler/tp/home/data/$ANIMAL
-KLUSTERING=/home/reichler/tp/home/code/Klustering
+ANIMAL=25813
+DATA_DIR=/home/reichler/tp/homes/arto/data/acute/$ANIMAL/arto
+KLUSTERING=/home/reichler/tp/home/code/klustering
 
 # File with list of data directories. Also used to name output files.
 SESSION_PATH=$1
@@ -20,7 +20,7 @@ REFFED="$SESSION"_meanref.dat
 PRB_PATH=$2
 if [ -z "$PRB_PATH" ]; then
 	echo Using default probe path for animal $ANIMAL
-	PRB_PATH="$DATA_DIR"/"$ANIMAL"_16.prb
+	PRB_PATH="$ANIMAL"_8.prb
 fi
 
 echo testing probe path $PRB_PATH
@@ -50,7 +50,7 @@ echo --------------------------------
 if [ -f "$DATFILE" ]; then
 	echo Dat file exists, skipping conversion.
 else
-	dm conv -T $SESSION $source_dirs -l $PRB_PATH 
+	dm conv -T $SESSION $source_dirs -l $PRB_PATH
 fi
 
 
@@ -76,13 +76,14 @@ dm split $REFFED -l $SESSION.prb
 echo
 
 # Generate prm files
+echo Generating .prm files
 $KLUSTERING/prm.py
 
 # Give everyone their own directory
-for CG in {00..15}; do
+for CG in {0..7}; do
 	if ! [ -d CG$CG ]; then
 		mkdir CG$CG
-		mv *_$CG.* CG$CG
+		mv *_meanref_$CG.* CG$CG
 		cp $KLUSTERING/tetrode.prb CG$CG 
 	fi
 done
@@ -91,12 +92,12 @@ done
 echo Activating Unmasked klusta virtualenv
 source activate klusta_um
 
-parallel --eta -j8 'sleep {3}; echo starting CG$CG; cd CG{1} && klusta {2}_meanref_{1}.prm' ::: {00..15} ::: $SESSION ::: $(( 60 * $CG ))
+parallel --eta -j8 'echo starting CG$CG; cd CG{1} && klusta {2}_meanref_{1}.prm' ::: {0..7} ::: $SESSION ::: $(( 60 * $CG ))
 
 # Cleanup
 if $DELETE_DOTFOLDERS; then
 	echo Deleting .spikedetekt and .klustakwik2 directories.
-	for CG in {00..15}; do
+	for CG in {0..7}; do
 		rm -Rf CG$CG/.spikedetekt CG$CG/.klustakwik2
 	done
 fi

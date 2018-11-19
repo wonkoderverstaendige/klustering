@@ -7,10 +7,18 @@ from itertools import combinations
 from pprint import pformat as pretty
 
 
-geometries = {0: (1.25, 0.25),
-              1: (1.25, -0.25),
-              2: (0.75, 0.25),
-              3: (0.75, -0.25)}
+# geometries = {0: (1.25, 0.25),
+              # 1: (1.25, -0.25),
+              # 2: (0.75, 0.25),
+              # 3: (0.75, -0.25)}
+              
+              
+ 
+geometries = {0: (0, 0),
+              1: (0, 1),
+              2: (0, 2),
+              3: (0, 3)}
+
 
 
 def csv_to_prb(csv_path, prb_path):
@@ -20,7 +28,7 @@ def csv_to_prb(csv_path, prb_path):
         next(reader)
         rows = list(reader)
 
-    ids = [int(row[0]) for row in rows]
+    ids = [int(row[0]) - 1 for row in rows]
     descs = [row[1].strip() for row in rows]
     dead = sorted([ids[n] for n in range(len(ids)) if descs[n] not in ['tetrode']])
 
